@@ -2,7 +2,7 @@ import requests
 
 from flask import Flask, request, Response, jsonify
 
-HEARTBEAT_SERVER_DNS = "https://jsonplaceholder.typicode.com/"
+HEARTBEAT_SERVER_DNS = ""
 
 
 class LoadBalancer:
@@ -21,9 +21,9 @@ class LoadBalancer:
             get the server at the front of the queue
             check if the server is healthy, if yes, redirect the request to the selected server
             else, take the server and put it to the back of the queue, and move 
-            on to the next available server in the queue
-            
+            on to the next available server in the queue   
     """
+
     def select_server(self):
         while True:
             curr_server = self.server_queue[0]
@@ -37,7 +37,8 @@ class LoadBalancer:
 
     # check if the selected server is healthy in the health table
     def check_is_healthy(self, server_ip):
-        # response = requests.get(f'{HEARTBEAT_SERVER_DNS}/ishealthy?server={server_ip}')
+        response = requests.get(f'{HEARTBEAT_SERVER_DNS}/ishealthy?server={server_ip}')
+        print(response.json())
         return True
 
     # add a new server to the LoadBalancer service, part of auto-scaling functionality
@@ -79,7 +80,7 @@ def remove_from_queue():
 
 @app.route('/checkheartbeat')
 def check_heart_beat():
-    return jsonify("im-alive")
+    return jsonify(msg="healthy")
 
 
 @app.route('/<path:path>', methods=['GET', 'POST', 'DELETE'])
