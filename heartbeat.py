@@ -49,6 +49,7 @@ def return_is_healthy():
 @app.route('/add-server')
 def add_server():
     args = request.args.to_dict()
+    print(args)
     server = args.get("server")
     heartbeat.brain.set(server, "healthy")
     return jsonify(msg="server added")
@@ -62,6 +63,14 @@ def remove_server():
     return jsonify(msg="server removed")
 
 
+# check the other heartbeat server
+# if the other server is not well, take over as the primary heartbeat server and
+# send a request to auto_scaler to restart that heartbeat server
+@app.route('/check-self')
+def check_self():
+    pass
+
+
 # THIS IS FOR DEBUG PURPOSES ONLY
 @app.route('/kill-server')
 def kill_server():
@@ -73,4 +82,4 @@ def kill_server():
 if __name__ == '__main__':
     heartbeat_checker_thread = threading.Thread(target=heartbeat.check_health)
     heartbeat_checker_thread.start()
-    app.run(host='0.0.0.0', port=80, debug=False)
+    app.run(host='0.0.0.0', port=8082, debug=False)

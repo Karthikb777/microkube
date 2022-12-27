@@ -1,8 +1,12 @@
 import requests
+import redis
 
 from flask import Flask, request, Response, jsonify
 
+# ENV VARS
 HEARTBEAT_SERVER_DNS = ""
+NODES = "nodes"
+HEALTHY = "healthy"
 
 
 class LoadBalancer:
@@ -11,9 +15,12 @@ class LoadBalancer:
             this contains the algorithm to select which server the request has to go to
     """
 
-    def __init__(self, servers: list):
+    def __init__(self):
+        self.brain = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
         self.server_queue = list()
-        for server in servers:
+        list_of_servers = self.brain.lrange(HEALTHY, start=0, end=-1)
+        print(list_of_servers)
+        for server in list_of_servers:
             self.server_queue.append(server)
 
     """
@@ -31,15 +38,13 @@ class LoadBalancer:
             self.server_queue.pop(0)
             if self.check_is_healthy(curr_server):
                 return curr_server
-            else:
-                pass
-                # TODO: send request to heartbeat server to restart the dying server
 
     # check if the selected server is healthy in the health table
     def check_is_healthy(self, server_ip):
-        response = requests.get(f'{HEARTBEAT_SERVER_DNS}/ishealthy?server={server_ip}')
-        print(response.json())
-        return True
+        if self.brain.get(server_ip) == "healthy":
+            return True
+        else:
+            return False
 
     # add a new server to the LoadBalancer service, part of auto-scaling functionality
     def add_new_server(self, server_ip):
@@ -53,8 +58,7 @@ class LoadBalancer:
 
 
 app = Flask(__name__)
-servers = ["172.17.0.4", "172.17.0.3", "172.17.0.2"]
-load_balancer = LoadBalancer(servers)
+load_balancer = LoadBalancer()
 
 
 @app.route('/')
@@ -112,4 +116,4 @@ def reverse_proxy(path):
 
 
 if __name__ == '__main__':
-    app.run(debug=False, host="0.0.0.0", port=80)
+    app.run(debug=False, host="0.0.0.0", port=8081)
