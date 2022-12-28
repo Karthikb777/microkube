@@ -4,35 +4,43 @@ import requests
 import threading
 from flask import Flask, request, jsonify
 
+# ENV VARS
+HEALTHY = "healthy"
+LOAD_BALANCERS = "load-balancers"
+TOTAL_NODES = 'total-nodes'
+
 
 class HeartBeat:
     def __init__(self):
-        self.brain = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+        self.brain = redis.Redis(host='172.19.0.2', port=6379, db=0, decode_responses=True)
 
     def check_health(self):
         while True:
-            if len(self.brain.keys(pattern="*")) != 0:
-                for server in self.brain.keys(pattern="*"):
+            if self.brain.llen(HEALTHY) != 0:
+                for server in self.brain.lrange(HEALTHY, start=0, end=-1):
                     url = f'http://{server}/checkheartbeat'
                     try:
                         # if the response time is > 1 second, we consider the server as dead
                         response = requests.get(url, timeout=1, verify=False)
-                        if 200 <= response.status_code < 400:
-                            self.brain.set(server, "healthy")
-                        else:
-                            self.brain.set(server, "dead")
+                        if not 200 <= response.status_code < 400:
+                            self.brain.lrem(HEALTHY, value=server, count=1)
+                            self.brain.set(TOTAL_NODES, int(self.brain.get(TOTAL_NODES)) - 1)
+
+                            load_balancers = self.brain.lrange(LOAD_BALANCERS, start=0, end=-1)
+                            for lb in load_balancers:
+                                try:
+                                    requests.get(f"http://{lb}/removefromqueue", timeout=1)
+                                except:
+                                    pass
                     except Exception as e:
-                        self.brain.set(server, "dead")
-            print(self.brain)
-            time.sleep(10)  # sleep for 60 seconds
-
-    """
-        stops and restarts an unhealthy server
-    """
-
-    # send a request to the auto-scaler to restart the server
-    def resurrect(self):
-        pass
+                        self.brain.lrem(HEALTHY, value=server, count=1)
+                        load_balancers = self.brain.lrange(LOAD_BALANCERS, start=0, end=-1)
+                        for lb in load_balancers:
+                            try:
+                                requests.get(f"http://{lb}/removefromqueue", timeout=1)
+                            except:
+                                pass
+            time.sleep(10)  # sleep for 10 seconds
 
 
 app = Flask(__name__)
@@ -74,9 +82,8 @@ def check_self():
 # THIS IS FOR DEBUG PURPOSES ONLY
 @app.route('/kill-server')
 def kill_server():
-    args = request.args.to_dict()
-    server = args.get("server")
-    heartbeat.brain.set(server, "dead")
+    requests.get(f"as:8000/stop-container")
+    return "stopped"
 
 
 if __name__ == '__main__':

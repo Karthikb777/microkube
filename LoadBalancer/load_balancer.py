@@ -16,7 +16,7 @@ class LoadBalancer:
     """
 
     def __init__(self):
-        self.brain = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+        self.brain = redis.Redis(host='172.19.0.2', port=6379, db=0, decode_responses=True)
         self.server_queue = list()
         list_of_servers = self.brain.lrange(HEALTHY, start=0, end=-1)
         print(list_of_servers)
@@ -116,4 +116,4 @@ def reverse_proxy(path):
 
 
 if __name__ == '__main__':
-    app.run(debug=False, host="0.0.0.0", port=8081)
+    app.run(debug=False, host="0.0.0.0", port=80)

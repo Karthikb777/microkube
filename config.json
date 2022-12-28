@@ -1,0 +1,42 @@
+{
+  "network": {
+    "driver": "bridge",
+    "name": "HAN"
+  },
+
+  "images": {
+    "brain_image": "",
+    "node_image": "",
+    "load_balancer_image": "",
+    "heart_beat_server_image": "",
+    "auto_scaler_image": ""
+  },
+
+  "open_ports": {
+    "node_port": 80,
+    "brain_port": 6379,
+    "load_balancer_port": 80,
+    "heart_beat_server_port": 80
+  },
+
+  "container_names": {
+    "brain_name": "brain",
+    "load_balancer_name": "lb",
+    "auto_scaler_name": "as",
+    "heart_beat_server_name": "hb",
+    "node_name": "node"
+  },
+
+  "redis_keys": {
+    "healthy_nodes": "healthy",
+    "load_balancers": "load_balancers",
+    "heart_beat_servers": "heartbeat",
+    "primary_load_balancer": "primaryLB",
+    "primary_heart_beat_server": "primaryHB"
+  },
+
+  "desired_state": {
+    "ideal_nodes": 3,
+    "max_nodes": 10
+  }
+}

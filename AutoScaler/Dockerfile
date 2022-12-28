@@ -4,5 +4,6 @@ WORKDIR /app
 RUN pip install Flask
 RUN pip install requests
 RUN pip install redis
+RUN pip install docker
 ENTRYPOINT ["python"]
-CMD ["load_balancer.py", "--host", "0.0.0.0"]
+CMD ["auto_scaler.py", "--host", "0.0.0.0"]

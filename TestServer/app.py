@@ -1,7 +1,13 @@
+import flask
 from flask import Flask, request
 import socket
 
 app = Flask(__name__)
+
+
+@app.route('/checkheartbeat')
+def heartbeat():
+    return flask.jsonify(msg="im-alive")
 
 
 @app.route('/<path:path>', methods=["GET", "POST", "DELETE"])
