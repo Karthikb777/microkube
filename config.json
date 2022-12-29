@@ -1,22 +1,23 @@
 {
   "network": {
     "driver": "bridge",
-    "name": "HAN"
+    "name": "cluster-network"
   },
 
   "images": {
-    "brain_image": "",
-    "node_image": "",
-    "load_balancer_image": "",
-    "heart_beat_server_image": "",
-    "auto_scaler_image": ""
+    "brain_image": "brain:1.0",
+    "node_image": "testserver:1.0",
+    "load_balancer_image": "loadbalancer:1.0",
+    "heart_beat_server_image": "heartbeat:1.0",
+    "auto_scaler_image": "autoscaler:1.0"
   },
 
   "open_ports": {
     "node_port": 80,
     "brain_port": 6379,
     "load_balancer_port": 80,
-    "heart_beat_server_port": 80
+    "heart_beat_server_port": 80,
+    "auto_scaler_port": 80
   },
 
   "container_names": {

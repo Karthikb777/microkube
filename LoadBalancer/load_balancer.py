@@ -1,12 +1,13 @@
+import logging
 import requests
 import redis
-
+import os
 from flask import Flask, request, Response, jsonify
 
 # ENV VARS
-HEARTBEAT_SERVER_DNS = ""
-NODES = "nodes"
-HEALTHY = "healthy"
+BRAIN_IP = os.environ.get('BRAIN_IP')
+BRAIN_PORT = os.environ.get('BRAIN_PORT')
+HEALTHY = os.environ.get('BRAIN_KEY_HEALTHY')
 
 
 class LoadBalancer:
@@ -16,10 +17,9 @@ class LoadBalancer:
     """
 
     def __init__(self):
-        self.brain = redis.Redis(host='172.19.0.2', port=6379, db=0, decode_responses=True)
+        self.brain = redis.Redis(host=BRAIN_IP, port=int(BRAIN_PORT), db=0, decode_responses=True)
         self.server_queue = list()
         list_of_servers = self.brain.lrange(HEALTHY, start=0, end=-1)
-        print(list_of_servers)
         for server in list_of_servers:
             self.server_queue.append(server)
 
@@ -32,16 +32,18 @@ class LoadBalancer:
     """
 
     def select_server(self):
+        logging.warning(msg=f"selecting server...")
         while True:
             curr_server = self.server_queue[0]
             self.server_queue.append(curr_server)
             self.server_queue.pop(0)
             if self.check_is_healthy(curr_server):
+                logging.info(msg=f"selected server: {curr_server}")
                 return curr_server
 
     # check if the selected server is healthy in the health table
     def check_is_healthy(self, server_ip):
-        if self.brain.get(server_ip) == "healthy":
+        if server_ip in self.brain.lrange(HEALTHY, 0, -1):
             return True
         else:
             return False
@@ -90,8 +92,7 @@ def check_heart_beat():
 @app.route('/<path:path>', methods=['GET', 'POST', 'DELETE'])
 def reverse_proxy(path):
     redirect_server = load_balancer.select_server()
-    print("current queue: ", redirect_server)
-    print("current queue: ", load_balancer.server_queue)
+    logging.info(msg=f"current queue: {load_balancer.server_queue}")
     if request.method == "GET":
         response = requests.get(f"http://{redirect_server}/{path}")
 
