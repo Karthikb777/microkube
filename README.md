@@ -1,9 +1,29 @@
-Basic architecture
 
-Load Balancer is a flask server with a reverse proxy and a round robin algorithm to select the server.
+# MicroKube
 
-HeartBeat server is a flask server which does health checking periodically.
-It holds the state data for the cluster.
-So, this is the center of the cluster.
+A simple container orchestration service, made with Python.
 
-Auto-scaler is another flask server. This gets the data from the HeartBeat server and, if needed, starts another server or stops an existing server.
+## Architecture
+The following parts are present in the cluster:
+- LoadBalancer: A simple Load balancer service with Round Robin load balancing, written in Flask.
+- HeartBeat: A service which checks the servers periodically if they are up or down. 
+- AutoScaler: A service which automatically scales up or down the number of servers based on the condition of the cluster.
+- Brain: An in-memory Redis data store which holds the state data for the entire cluster.
+- Server: Runs our app.
+
+![Architecture](Architecture.png?raw=true "Architecture")
+
+## Requirements
+- [Docker](https://www.docker.com/)
+- [Python](https://www.python.org/)
+- [Docker SDK for Python](https://docker-py.readthedocs.io/en/stable/)
+- [Redis-py](https://redis-py.readthedocs.io/en/stable/)
+
+## How to Run
+- Install all the required dependencies.
+- Build the images for the different components (LoadBalancer, HeartBeat, AutoScaler, Brain, Server)
+- Update the config.json with the names of the images that were built.
+- Make changes to the values in config.json, if required.
+- Run Core.py.
+- To bring the cluster up: `python Core.py -c path/to/config.json -u true`
+- To bring the cluster down: `python Core.py -c path/to/config.json -d true`
