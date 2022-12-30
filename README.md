@@ -11,7 +11,7 @@ The following parts are present in the cluster:
 - Brain: An in-memory Redis data store which holds the state data for the entire cluster.
 - Server: Runs our app.
 
-![Architecture](Architecture.png?raw=true "Architecture")
+[![Architecture.png](https://i.postimg.cc/G2hvNvWq/Architecture.png)](https://postimg.cc/4KqKHHN9)
 
 ## Requirements
 - [Docker](https://www.docker.com/)
